@@ -16,6 +16,7 @@ class TCXParser:
         tree = objectify.parse(tcx_file)
         self.root = tree.getroot()
         self.activity = self.root.Activities.Activity
+        self._time_stopped = 0
 
     def hr_values(self):
         return [int(x.text) for x in self.root.xpath('//ns:HeartRateBpm/ns:Value', namespaces={'ns': namespace})]
@@ -43,6 +44,26 @@ class TCXParser:
 
     def cadence_values(self):
         return [int(x.text) for x in self.root.xpath('//ns:Cadence', namespaces={'ns': namespace})]
+
+    def speed_values(self):
+        speeds = []
+        distance_data = self.distance_values()
+        distance_data_size = len(distance_data)
+        time_stopped = 0
+        for i in range(0, distance_data_size - 1):
+            if i == 0:
+                speeds.append(0)
+            elif i == distance_data_size - 1:
+                speeds.append(speeds[i - 1])
+            else:
+                speed = distance_data[i+1] - distance_data[i]
+                if speed <= 0:
+                    time_stopped += 1
+                    continue
+                speeds.append(speed)
+
+        self._time_stopped = time_stopped
+        return speeds
 
     @property
     def latitude(self):
@@ -101,9 +122,36 @@ class TCXParser:
         return int(sum(power_data) / len(power_data))
 
     @property
+    def avg_speed(self):
+        """Average speed of the workout in m/s"""
+        speed_data = self.speed_values()
+        if len(speed_data) > 0:
+            return round(int(sum(speed_data) / len(speed_data)), 1)
+        else:
+            return 0
+
+    @property
+    def time_stopped(self):
+        """Time stopped in seconds"""
+        if self._time_stopped == 0:
+            self.speed_values() # if the speed values function was not called, calls it to force calculation
+
+        return self._time_stopped
+
+    @property
+    def moving_time(self):
+        """Time moving in seconds"""
+        return int(self.duration - self._time_stopped)
+
+    @property
     def hr_max(self):
         """Maximum heart rate of the workout"""
         return max(self.hr_values())
+
+    @property
+    def speed_max(self):
+        """Maximum speed of the workout in m/s"""
+        return round(max(self.speed_values()), 1)
 
     @property
     def power_max(self):
