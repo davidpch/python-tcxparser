@@ -8,7 +8,7 @@ import time
 from lxml import objectify
 
 namespace = 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
-
+extension_namespace = 'http://www.garmin.com/xmlschemas/ActivityExtension/v2'
 
 class TCXParser:
 
@@ -19,6 +19,12 @@ class TCXParser:
 
     def hr_values(self):
         return [int(x.text) for x in self.root.xpath('//ns:HeartRateBpm/ns:Value', namespaces={'ns': namespace})]
+
+    def power_values(self):
+        result = []
+        for x in self.root.xpath('//ns3:TPX/ns3:Watts', namespaces={'ns3': extension_namespace}):
+            result.append(int(x.text))
+        return result
 
     def altitude_points(self):
         return [float(x.text) for x in self.root.xpath('//ns:AltitudeMeters', namespaces={'ns': namespace})]
@@ -89,9 +95,20 @@ class TCXParser:
         return int(sum(hr_data) / len(hr_data))
 
     @property
+    def power_avg(self):
+        """Average power of the workout"""
+        power_data = self.power_values()
+        return int(sum(power_data) / len(power_data))
+
+    @property
     def hr_max(self):
         """Maximum heart rate of the workout"""
         return max(self.hr_values())
+
+    @property
+    def power_max(self):
+        """Maximum power of the workout"""
+        return max(self.power_values())
 
     @property
     def hr_min(self):

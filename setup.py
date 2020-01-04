@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 __version__ = '1.0.0'
 
 setup(
-    name='python-tcxparser',
+    name='dpac-tcxparser',
     version=__version__,
-    description='Simple parser for Garmin TCX files',
+    description='Simple parser for Garmin/Polar TCX files',
     long_description=open('README.rst').read(),
-    author='Vinod Kurup',
+    author='David Pacheco & Vinod Kurup',
     author_email='vinod@kurup.com',
-    url='https://github.com/vkurup/python-tcxparser/',
+    url='https://github.com/davidpch/python-tcxparser/',
     packages=find_packages(include=['tcxparser']),
     include_package_data=True,
     license='BSD',
